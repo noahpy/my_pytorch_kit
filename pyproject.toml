@@ -1,0 +1,26 @@
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "my_pytorch_kit"
+version = "0.1.0"
+authors = [
+  { name="Noah Schlenker", email="noschl@proton.me" },
+]
+description = "My toolkit for pytorch model development"
+readme = "README.md"
+requires-python = ">=3.8"
+
+dependencies = [
+    # List your third-party dependencies from requirements.txt here
+    "matplotlib",
+    "numpy",
+    "torch",
+    "tqdm",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]  # Look for packages in the root directory
+include = ["my_pytorch_kit*"] 
