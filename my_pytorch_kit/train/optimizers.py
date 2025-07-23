@@ -21,6 +21,22 @@ class TotalOptimizer:
 
 
 def get_optimizer_total_optimizer(model, hparams, use_scheduler=False) -> TotalOptimizer:
+    """
+    Get the optimizer and the scheduler
+
+    Parameters
+    ----------
+    model: torch.nn.Module
+        The model to train.
+    hparams: dict
+        Hyperparameters.
+    use_scheduler: bool
+        Whether to use a scheduler.
+
+    Returns
+    -------
+    TotalOptimizer
+    """
     learning_rate = hparams.get("learning_rate", 1e-3)
     scheduler = None
     if "optimizer" not in hparams:

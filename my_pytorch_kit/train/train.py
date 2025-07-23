@@ -31,6 +31,10 @@ def train_model(model, hparams, train_loader, val_loader, loss_func, optimizer, 
         The optimizer.
     tb_logger: SummaryWriter
         The tensorboard logger.
+    name: str
+        The name of the model.
+    override_instance_errors: bool
+        Whether to ignore instance errors.
     """
 
     if not issubclass(type(model), BaseModel) and not override_instance_errors:
