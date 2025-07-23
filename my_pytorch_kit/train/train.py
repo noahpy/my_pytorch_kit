@@ -10,7 +10,8 @@ def create_tqdm_bar(iterable, desc):
     return tqdm(enumerate(iterable), total=len(iterable), ncols=150, desc=desc)
 
 
-def train_model(model, hparams, train_loader, val_loader, loss_func, optimizer, tb_logger, name="default"):
+def train_model(model, hparams, train_loader, val_loader, loss_func, optimizer, tb_logger,
+                name="default", override_instance_errors=False):
     """
     Train a model and log to tensorboard.
 
@@ -32,10 +33,10 @@ def train_model(model, hparams, train_loader, val_loader, loss_func, optimizer, 
         The tensorboard logger.
     """
 
-    if not issubclass(type(model), BaseModel):
-        raise ValueError("Model must be a subclass of BaseModel")
+    if not issubclass(type(model), BaseModel) and not override_instance_errors:
+        raise ValueError(f"Model with type {type(model)} must be a subclass of BaseModel")
 
-    if not isinstance(optimizer, TotalOptimizer):
+    if not isinstance(optimizer, TotalOptimizer) and not override_instance_errors:
         raise ValueError("Optimizer must be an instance of TotalOptimizer")
 
     epochs = hparams.get("epochs", 10)
@@ -64,7 +65,7 @@ def train_model(model, hparams, train_loader, val_loader, loss_func, optimizer, 
 
                 # Update the progress bar.
                 training_loop.set_postfix(curr_train_loss = "{:.5f}".format(np.mean(training_loss)),
-                                          lr = "{:.5f}".format(optimizer.param_groups[0]['lr'])
+                                          lr = "{:.5f}".format(optimizer.optimizer.param_groups[0]['lr'])
                                           )
 
                 # Update the tensorboard logger.

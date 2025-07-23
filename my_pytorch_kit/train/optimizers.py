@@ -23,6 +23,8 @@ class TotalOptimizer:
 def get_optimizer_total_optimizer(model, hparams, use_scheduler=False) -> TotalOptimizer:
     learning_rate = hparams.get("learning_rate", 1e-3)
     scheduler = None
+    if "optimizer" not in hparams:
+        hparams["optimizer"] = "Adam"
     if hparams["optimizer"] == "SGD":
         optimizer = torch.optim.SGD(model.parameters(), learning_rate)
     else:
