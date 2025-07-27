@@ -1,3 +1,4 @@
+![Testing workflow](https://github.com/noahpy/pytorch_toolkit/actions/workflows/ci.yaml/badge.svg)
 
 ## Pytorch toolkit
 Userful pytorch toolkit for training models.
