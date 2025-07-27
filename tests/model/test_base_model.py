@@ -10,7 +10,8 @@ class SimpleModel(BaseModel):
     """
 
     def __init__(self, hparams, use_lazy=False, use_layernorm=False):
-        super().__init__(hparams)
+        super().__init__()
+        self.hparams = hparams
         if use_lazy:
             self.fc1 = nn.LazyLinear(128)
         else:
@@ -131,7 +132,8 @@ def test_proper_weight_init_kaiming_vs_xavier(hparams):
     # More ReLU-like activations -> Kaiming
     class KaimingModel(BaseModel):
         def __init__(self, hparams):
-            super().__init__(hparams)
+            super().__init__()
+            self.hparams = hparams
             self.fc1 = nn.Linear(hparams['input_dim'], 128)
             self.a1 = nn.ReLU()
             self.fc2 = nn.Linear(128, 64)
@@ -150,7 +152,8 @@ def test_proper_weight_init_kaiming_vs_xavier(hparams):
     # More Sigmoid-like activations -> Xavier
     class XavierModel(BaseModel):
         def __init__(self, hparams):
-            super().__init__(hparams)
+            super().__init__()
+            self.hparams = hparams
             self.fc1 = nn.Linear(hparams['input_dim'], 128)
             self.a1 = nn.Sigmoid()
             self.fc2 = nn.Linear(128, 64)

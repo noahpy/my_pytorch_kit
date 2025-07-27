@@ -16,7 +16,7 @@ from my_pytorch_kit.model.models import BaseModel
 # If it requires arguments, they would be passed here.
 class MockModelForTest(BaseModel):
     def __init__(self):
-        super().__init__({})
+        super().__init__()
         # If BaseModel is a torch.nn.Module, it's good practice to have a parameter
         self._param = torch.nn.Parameter(torch.empty(1))
 

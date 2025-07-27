@@ -4,14 +4,13 @@ from abc import abstractmethod
 
 class BaseModel(nn.Module):
     """
-    Abstract ase class for all models.
+    Abstract base class for all models.
     Requires implementation of the calc_loss function.
     Implements weight intialization functions.
     """
 
-    def __init__(self, hparams):
+    def __init__(self, **args):
         super().__init__()
-        self.hparams = hparams
 
     @abstractmethod
     def calc_loss(self, batch, criterion) -> torch.Tensor:
