@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from abc import abstractmethod
+import os
 
 class BaseModel(nn.Module):
     """
@@ -84,3 +85,32 @@ class BaseModel(nn.Module):
                     nn.init.uniform_(param, -0.1, 0.1)
             elif 'bias' in name:
                 nn.init.zeros_(param)  # Always initialize biases to zero
+
+
+    def save_model(self, path):
+        """
+        Save models state to given path.
+        Will create directories if necessary.
+
+        Parameters
+        ----------
+        path: str
+            Path to save model to.
+        """
+
+        base_dir = os.path.dirname(path)
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+        torch.save(self.state_dict(), path)
+
+    def load_model(self, path):
+        """
+        Load model from given path.
+
+        Parameters
+        ----------
+        path: str
+            Path to load model from.
+        """
+        self.load_state_dict(torch.load(path))
+        
