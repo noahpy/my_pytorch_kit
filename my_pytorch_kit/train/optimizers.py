@@ -11,6 +11,7 @@ class TotalOptimizer:
         self.model = model
         self.optimizer = optimizer
         self.scheduler = scheduler
+        self.max_norm = max_norm
 
     def step(self):
         if self.max_norm:

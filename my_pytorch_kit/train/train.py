@@ -91,4 +91,5 @@ def train_model(model, hparams, train_loader, val_loader, loss_func, optimizer, 
                     # Update the tensorboard logger.
                     tb_logger.add_scalar(f'{name}/val_loss', np.mean(validation_loss), epoch * len(val_loader) + val_iteration)
     except KeyboardInterrupt:
+        print("Training interrupted by user.")
         return
