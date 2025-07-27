@@ -73,4 +73,4 @@ def get_optimizer_total_optimizer(model, hparams, use_scheduler=False, use_grad_
     if use_grad_clip:
         max_norm = hparams.get("max_norm", DEFAULT_MAX_NORM)
 
-    return TotalOptimizer(optimizer, scheduler, max_norm)
+    return TotalOptimizer(model, optimizer, scheduler, max_norm)
