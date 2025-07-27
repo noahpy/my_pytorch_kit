@@ -21,6 +21,18 @@ dependencies = [
     "tqdm",
 ]
 
+[project.optional-dependencies]
+dev = [
+ "pytest",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]  # Look for packages in the root directory
 include = ["my_pytorch_kit*"] 
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+# Tell pytest where to find the tests
+testpaths = [
+    "tests",
+]
