@@ -14,21 +14,16 @@ readme = "README.md"
 requires-python = ">=3.8"
 
 dependencies = [
-    # List your third-party dependencies from requirements.txt here
-    "matplotlib",
     "numpy",
     "torch",
     "tqdm",
+    "tensorboard",
 ]
 
 [project.optional-dependencies]
 dev = [
  "pytest",
 ]
-
-[tool.setuptools.packages.find]
-where = ["."]  # Look for packages in the root directory
-include = ["my_pytorch_kit*"] 
 
 [tool.pytest.ini_options]
 minversion = "6.0"
