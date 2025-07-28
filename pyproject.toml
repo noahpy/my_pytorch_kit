@@ -12,6 +12,7 @@ authors = [
 description = "My toolkit for pytorch model development"
 readme = "README.md"
 requires-python = ">=3.8"
+license = { file = "LICENSE" }
 
 dependencies = [
     "numpy",
@@ -19,6 +20,9 @@ dependencies = [
     "tqdm",
     "tensorboard",
 ]
+
+[project.urls]
+Homepage = "https://github.com/noahpy/my_pytorch_kit"
 
 [tool.setuptools]
 py-modules = ["my_pytorch_kit"]
@@ -43,3 +47,25 @@ filterwarnings = [
     "ignore:Call to deprecated create function FileDescriptor",
     "ignore:Call to deprecated create function Descriptor",
 ]
+
+[tool.bumpver]
+current_version = "0.1.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+pre_commit_hook = ""
+post_commit_hook = ""
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+]
+"README.md" = [
+    "{version}",
+    "{pep440_version}",
+]
+
