@@ -20,6 +20,9 @@ dependencies = [
     "tensorboard",
 ]
 
+[tool.setuptools]
+py-modules = []
+
 [project.optional-dependencies]
 dev = [
  "pytest",
