@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-py-modules = []
+py-modules = ["my_pytorch_kit"]
 
 [project.optional-dependencies]
 dev = [
@@ -33,4 +33,13 @@ minversion = "6.0"
 # Tell pytest where to find the tests
 testpaths = [
     "tests",
+]
+
+filterwarnings = [
+    # Each warning filter is a single string in the array.
+    "ignore:Call to deprecated create function FieldDescriptor",
+    "ignore:Call to deprecated create function EnumValueDescriptor",
+    "ignore:Call to deprecated create function EnumDescriptor",
+    "ignore:Call to deprecated create function FileDescriptor",
+    "ignore:Call to deprecated create function Descriptor",
 ]
