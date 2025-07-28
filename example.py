@@ -21,7 +21,7 @@ class MyMnistModel(BaseModel):
     """
     A simple example model, extending BaseModel class.
     All subclasses of BaseModel must implement calc_loss(), which is 
-    then used by the train_model() training loop.
+    then used by the Trainer.train() training loop.
     """
 
     def __init__(self):
