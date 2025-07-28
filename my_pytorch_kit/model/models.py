@@ -14,7 +14,24 @@ class BaseModel(nn.Module):
         super().__init__()
 
     @abstractmethod
-    def calc_loss(self, batch, criterion) -> torch.Tensor:
+    def calc_loss(self, batch, criterion, **kwargs) -> torch.Tensor:
+        """
+        Calculates the loss for a given batch and criterion.
+
+        Parameters
+        ----------
+        batch: torch.Tensor
+            A batch of data.
+        criterion: torch.nn.Module
+            A loss function.
+        **kwargs: dict
+            Additional arguments if needed.
+
+        Returns
+        -------
+        torch.Tensor
+            The loss for the batch.
+        """
         pass
 
 
@@ -113,4 +130,3 @@ class BaseModel(nn.Module):
             Path to load model from.
         """
         self.load_state_dict(torch.load(path))
-        
