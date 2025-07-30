@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from abc import abstractmethod
 import os
+import inspect
 
 class BaseModel(nn.Module):
     """
@@ -12,6 +13,18 @@ class BaseModel(nn.Module):
 
     def __init__(self, **args):
         super().__init__()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        init_signature = inspect.signature(cls.__init__)
+
+        # Check if the __init__ method accepts variable keyword arguments (**kwargs)
+        if not any(param.kind == inspect.Parameter.VAR_KEYWORD
+                   for param in init_signature.parameters.values()):
+            error = f"The __init__ method of '{cls.__name__}' must accept **kwargs."+\
+                "\nPlease add **kwargs to the __init__ method."+\
+                "\nThis is because the Tuner needs to be able to initialize different models."
+            raise TypeError(error)
 
     @abstractmethod
     def calc_loss(self, batch, criterion, **kwargs) -> torch.Tensor:

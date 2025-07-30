@@ -86,7 +86,7 @@ class Tuner:
             model = self.model_class(**configs[i])
 
             trainer = self.trainer_class(model, train_loader, val_loader)
-            val_loss = trainer.train(configs[i])
+            val_loss = trainer.train(**configs[i])
 
             results.append(val_loss)
 

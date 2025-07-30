@@ -15,7 +15,6 @@ from my_pytorch_kit.model.models import BaseModel
 from my_pytorch_kit.train.train import Trainer
 from my_pytorch_kit.evaluation.evaluation import Evaluator
 from my_pytorch_kit.train.optimizers import get_optimizer_total_optimizer
-from my_pytorch_kit.train.tensorboard import get_tensorboard_logger
 
 class MyMnistModel(BaseModel):
     """
@@ -24,7 +23,12 @@ class MyMnistModel(BaseModel):
     then used by the Trainer.train() training loop.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        """
+        Watch out!
+        In order to be able to be used by the Tuner, the __init__() method
+        must accept **kwargs.
+        """
         super(MyMnistModel, self).__init__()
         self.model = nn.Sequential(
             nn.LazyLinear(256),
@@ -34,6 +38,11 @@ class MyMnistModel(BaseModel):
             nn.Linear(64, 10),
         )
         self.use_softmax = False
+
+        # initialize weights
+        # as lazy layers are in use, one needs to pass in a random sample
+        random_sample = torch.randn((1, 784))
+        self.proper_weight_init(random_sample)
 
     def forward(self, x):
         x = self.model(x)
@@ -131,11 +140,6 @@ if __name__ == "__main__":
 
     # create model
     model = MyMnistModel()
-
-    # initialize weights
-    # as lazy layers are in use, one needs to pass in a random sample
-    random_sample = torch.randn((1, 784))
-    model.proper_weight_init(random_sample)
 
     print(model)
 

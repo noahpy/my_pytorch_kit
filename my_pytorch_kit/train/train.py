@@ -43,11 +43,13 @@ class Trainer:
         self.isTotalOptimizer = True
 
 
+
     def train(self, hparams, loss_func, optimizer, name="model", override_instance_errors=False) -> float:
         """
         Train a model and log loss to tensorboard.
         If interrupted by KeyboardInterrupt, exit gracefully.
-        Also compatible with torch.nn.Model as a model and torch.optim.Optimizer as an optimizer, if override_instance_errors is True.
+        Also compatible with torch.nn.Model as a model and torch.optim.Optimizer as an optimizer,
+        if override_instance_errors is True.
         Uses hparams["epochs"] and hparams["loss_cutoff_rate"], if not given, defaults are 10 and 0.1 respectively.
         If hparames["patience"] is given, use early stopping with given patience.
         Returns best validation loss.
