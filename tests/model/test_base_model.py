@@ -2,6 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 from my_pytorch_kit.model.models import BaseModel
+from my_pytorch_kit.train.optimizers import get_optimizer_total_optimizer
 
 
 class SimpleModel(BaseModel):

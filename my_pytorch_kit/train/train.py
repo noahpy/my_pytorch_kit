@@ -6,7 +6,7 @@ from my_pytorch_kit.model.models import BaseModel
 from my_pytorch_kit.train.tensorboard import get_tensorboard_logger
 
 def create_tqdm_bar(iterable, desc):
-    return tqdm(enumerate(iterable), total=len(iterable), ncols=150, desc=desc)
+    return tqdm(enumerate(iterable), total=len(iterable), desc=desc, dynamic_ncols=True)
 
 
 
@@ -44,7 +44,9 @@ class Trainer:
 
 
 
-    def train(self, loss_func, optimizer,
+    def train(self, 
+              optimizer,
+              loss_func,
               epochs=10,
               loss_cutoff_rate=0.1,
               patience=None,
@@ -59,10 +61,10 @@ class Trainer:
 
         Parameters
         ----------
-        loss_func: torch.nn.Module
-            The loss function.
         optimizer: torch.optim.Optimizer
             The optimizer.
+        loss_func: torch.nn.Module
+            The loss function.
         epochs: int
             The number of epochs to train for. (default: 10)
         loss_cutoff_rate: float
@@ -162,8 +164,8 @@ class Trainer:
             lr = optimizer.optimizer.param_groups[0]['lr']
         else:
             lr = optimizer.param_groups[0]['lr']
-        loop.set_postfix(curr_train_loss = "{:.5f}".format(loss),
-                         lr = "{:.5f}".format(lr))
+        loop.set_postfix(loss = "{:.4f}".format(loss),
+                         lr = "{:.4f}".format(lr))
 
     def set_validation_post_fix(self, loop, loss):
-        loop.set_postfix(val_loss = "{:.5f}".format(loss))
+        loop.set_postfix(loss = "{:.4f}".format(loss))
