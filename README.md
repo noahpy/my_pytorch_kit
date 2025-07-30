@@ -28,16 +28,19 @@ graph TD
         D["<b>Initialize Evaluator</b><br/>(extends Evaluator)"]
         E["trainer.train()"]
         F["evaluator.evaluate()"]
+        G["<b>Intitialize Tuner</b><br/>(Hyperparameter Tuning)"]
+        H["tuner.tune()"]
     end
 
     %% Define node relationships
     A --> C
     B --> C
-    G --> C
     A --> D
     B --> D
     C --> E
     D --> F
+    C --> G
+    G --> H
 
     %% Style the nodes
     style A fill:#fbe,stroke:#333,stroke-width:2px
@@ -47,9 +50,10 @@ graph TD
     style D fill:#cde,stroke:#333,stroke-width:2px
     style E fill:#cfc,stroke:#333,stroke-width:2px
     style F fill:#cfc,stroke:#333,stroke-width:2px
+    style G fill:#cde,stroke:#333,stroke-width:2px
+    style H fill:#cfc,stroke:#333,stroke-width:2px
 ```
 
-This package revolves around the `BaseModel`, `Trainer` and `Evaluator` classes, which are used to model, train and evaluate a model respectively by extending them.  
 For a **detailed** guide, see the `examples/example.py` file :)
 
 
