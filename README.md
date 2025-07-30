@@ -17,6 +17,7 @@ Then, you can import the module `my_pytorch_kit`.
 
 ## Usage
 
+<<<<<<< HEAD
 This package revolves around the `BaseModel`, `Trainer` and `Evaluator` classes, which are extended to model, train and evaluate a model respectively.  
 ```mermaid
 graph TD
@@ -49,7 +50,8 @@ graph TD
     style F fill:#cfc,stroke:#333,stroke-width:2px
 ```
 
-For a **detailed** guide, see the `examples.py` file.
+This package revolves around the `BaseModel`, `Trainer` and `Evaluator` classes, which are used to model, train and evaluate a model respectively by extending them.  
+For a **detailed** guide, see the `examples/example.py` file :)
 
 
 ## Development

@@ -161,7 +161,7 @@ if __name__ == "__main__":
     result = evaluator.evaluate(model, test_loader)
 
     # print result
-    print(f"Model accuracy on test set: {result}%")
+    print(f"Model accuracy on test set: {result*100:.2f}%")
 
     # save model
     model.save_model("models/model.pt")
