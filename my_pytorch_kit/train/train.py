@@ -15,7 +15,7 @@ class Trainer:
     A class for training a model.
     """
 
-    def __init__(self, model, train_loader, val_loader, tb_logger = None):
+    def __init__(self, model, train_loader, val_loader, tb_logger = None, initialize_tb = True):
         """
         Initialize the trainer.
 
@@ -29,20 +29,28 @@ class Trainer:
             The validation data loader.
         tb_logger: SummaryWriter
             The tensorboard logger.
+        initialize_tb: bool
+            Whether to initialize the tensorboard logger, if tb_logger is None.
         """
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
 
-        if tb_logger is None:
+        if tb_logger is None and initialize_tb:
             tb_logger = get_tensorboard_logger()
         self.tb_logger = tb_logger
 
+        self.isTotalOptimizer = True
 
-    def train(self, hparams, loss_func, optimizer, name="model", override_instance_errors=False):
+
+    def train(self, hparams, loss_func, optimizer, name="model", override_instance_errors=False) -> float:
         """
-        Train a model and log to tensorboard.
+        Train a model and log loss to tensorboard.
         If interrupted by KeyboardInterrupt, exit gracefully.
+        Also compatible with torch.nn.Model as a model and torch.optim.Optimizer as an optimizer, if override_instance_errors is True.
+        Uses hparams["epochs"] and hparams["loss_cutoff_rate"], if not given, defaults are 10 and 0.1 respectively.
+        If hparames["patience"] is given, use early stopping with given patience.
+        Returns best validation loss.
 
         Parameters
         ----------
@@ -56,6 +64,11 @@ class Trainer:
             The name of the model.
         override_instance_errors: bool
             Whether to ignore instance errors.
+
+        Returns
+        -------
+        best_val_loss: float
+            The best validation loss.
         """
 
         DEFAULT_EPOCHS = 10
@@ -64,22 +77,26 @@ class Trainer:
         if not issubclass(type(self.model), BaseModel) and not override_instance_errors:
             raise ValueError(f"model with type {type(self.model)} must be a subclass of BaseModel")
 
-        if not isinstance(optimizer, TotalOptimizer) and not override_instance_errors:
-            raise ValueError("Optimizer must be an instance of TotalOptimizer")
+        if not isinstance(optimizer, TotalOptimizer):
+            if not override_instance_errors:
+                raise ValueError("Optimizer must be an instance of TotalOptimizer")
+            self.isTotalOptimizer = False
 
         epochs = hparams.get("epochs", DEFAULT_EPOCHS)
 
         loss_cutoff = int(len(self.train_loader) * hparams.get("loss_cutoff_rate", DEFAULT_LOSS_CUTOFF_RATE))
 
+        patience = hparams.get("patience", None) 
+        patience_counter = 0
+        best_val_loss = float('inf')
+
         try:
             for epoch in range(epochs):
-
-                self.model.train()
-
                 training_loss = []
                 validation_loss = []
 
                 # TRAINING
+                self.model.train()
                 training_loop = create_tqdm_bar(self.train_loader, desc=f'Training Epoch [{epoch + 1}/{epochs}]')
                 for train_iteration, batch in training_loop:
                     optimizer.zero_grad()
@@ -89,15 +106,13 @@ class Trainer:
 
 
                     training_loss.append(loss.item())
-                    last_cutoff_loss = training_loss[-loss_cutoff:]
+                    last_cutoff_loss = np.mean(training_loss[-loss_cutoff:])
 
                     # Update the progress bar.
-                    training_loop.set_postfix(curr_train_loss = "{:.5f}".format(np.mean(last_cutoff_loss)),
-                                              lr = "{:.5f}".format(optimizer.optimizer.param_groups[0]['lr'])
-                                              )
+                    self.set_training_post_fix(training_loop, last_cutoff_loss, optimizer)
 
                     # Update the tensorboard logger.
-                    self.tb_logger.add_scalar(f'{name}/train_loss', loss.item(), epoch * len(self.train_loader) + train_iteration)
+                    self.add_tb_scalar(f'{name}/train_loss', loss.item(), epoch * len(self.train_loader) + train_iteration)
 
                 # VALIDATION
                 self.model.eval()
@@ -107,11 +122,46 @@ class Trainer:
                     for val_iteration, batch in val_loop:
                         loss = self.model.calc_loss(batch, loss_func)
                         validation_loss.append(loss.item())
+                        last_cutoff_loss = np.mean(validation_loss[-loss_cutoff:])
+
                         # Update the progress bar.
-                        val_loop.set_postfix(val_loss = "{:.5f}".format(np.mean(validation_loss)))
+                        self.set_validation_post_fix(val_loop, last_cutoff_loss)
 
                         # Update the tensorboard logger.
-                        self.tb_logger.add_scalar(f'{name}/val_loss', np.mean(validation_loss), epoch * len(self.val_loader) + val_iteration)
+                        self.add_tb_scalar(f'{name}/val_loss', last_cutoff_loss, epoch * len(self.val_loader) + val_iteration)
+
+                # best val loss check
+                total_val_loss = np.mean(validation_loss)
+                if total_val_loss < best_val_loss:
+                    best_val_loss = total_val_loss
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+
+                # patience check
+                if patience is not None and patience_counter >= patience:
+                    print(f"Early stopping at epoch {epoch + 1}.")
+                    break
+
+
         except KeyboardInterrupt:
             print("Training interrupted by user.")
-            return
+
+        return best_val_loss
+
+
+
+    def add_tb_scalar(self, *args, **kwargs):
+        if self.tb_logger is not None:
+            self.tb_logger.add_scalar(*args, **kwargs)
+
+    def set_training_post_fix(self, loop, loss, optimizer):
+        if self.isTotalOptimizer:
+            lr = optimizer.optimizer.param_groups[0]['lr']
+        else:
+            lr = optimizer.param_groups[0]['lr']
+        loop.set_postfix(curr_train_loss = "{:.5f}".format(loss),
+                         lr = "{:.5f}".format(lr))
+
+    def set_validation_post_fix(self, loop, loss):
+        loop.set_postfix(val_loss = "{:.5f}".format(loss))
