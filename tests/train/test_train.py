@@ -48,6 +48,7 @@ def mock_optimizer():
 
     total_optimizer_mock = MagicMock(spec=TotalOptimizer)
     total_optimizer_mock.optimizer = torch_optimizer_mock
+
     return total_optimizer_mock
 
 @pytest.fixture
@@ -154,6 +155,7 @@ def test_train_override_instance_errors(mock_loss_func, mock_tb_logger, mock_dat
     torch_optimizer_mock.param_groups = [{'lr': 0.001}]
     invalid_optimizer = MagicMock()
     invalid_optimizer.optimizer = torch_optimizer_mock
+    invalid_optimizer.param_groups = [{'lr': 0.001}]
 
     trainer = Trainer(invalid_model, mock_data_loader, mock_data_loader, mock_tb_logger)
 

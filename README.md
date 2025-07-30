@@ -17,7 +17,6 @@ Then, you can import the module `my_pytorch_kit`.
 
 ## Usage
 
-<<<<<<< HEAD
 This package revolves around the `BaseModel`, `Trainer` and `Evaluator` classes, which are extended to model, train and evaluate a model respectively.  
 ```mermaid
 graph TD
