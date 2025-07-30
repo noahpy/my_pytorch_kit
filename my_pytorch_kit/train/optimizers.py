@@ -61,9 +61,9 @@ def get_optimizer_total_optimizer(model, hparams, use_scheduler=False, use_grad_
     scheduler = None
     max_norm = None
 
-    if "optimizer" not in hparams:
-        hparams["optimizer"] = DEFAULT_OPTIMIZER
-    if hparams["optimizer"] == "SGD":
+    if "optimizer_method" not in hparams:
+        hparams["optimizer_method"] = DEFAULT_OPTIMIZER
+    if hparams["optimizer_method"] == "SGD":
         optimizer = torch.optim.SGD(model.parameters(), learning_rate)
     else:
         optimizer = torch.optim.Adam(model.parameters(), learning_rate)

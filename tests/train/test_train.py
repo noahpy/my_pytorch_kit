@@ -13,7 +13,7 @@ from my_pytorch_kit.model.models import BaseModel
 
 # Create a dummy class that IS a subclass of BaseModel to satisfy the type check
 class MockModelForTest(BaseModel):
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
         # A parameter is often needed for optimizers to initialize
         self._param = torch.nn.Parameter(torch.empty(1))
@@ -93,7 +93,7 @@ def test_train_happy_path(mock_model, mock_optimizer, mock_loss_func, mock_tb_lo
     trainer = Trainer(mock_model, mock_data_loader, mock_data_loader, mock_tb_logger)
     
     # 2. Action: Run the training
-    trainer.train(hparams, mock_loss_func, mock_optimizer)
+    trainer.train(mock_loss_func, mock_optimizer, **hparams)
 
     # 3. Assertions
     assert mock_model.train.call_count == hparams["epochs"]
@@ -113,7 +113,7 @@ def test_train_keyboard_interrupt(mock_model, mock_optimizer, mock_loss_func, mo
     trainer = Trainer(mock_model, mock_data_loader, mock_data_loader, mock_tb_logger)
 
     with patch('my_pytorch_kit.train.train.create_tqdm_bar', side_effect=KeyboardInterrupt):
-        trainer.train(hparams, mock_loss_func, mock_optimizer)
+        trainer.train(mock_loss_func, mock_optimizer, **hparams)
         # Assert that the training started but did not complete all epochs
         assert mock_model.train.call_count == 1
         assert mock_model.eval.call_count == 0 # Should exit before validation
@@ -128,7 +128,7 @@ def test_train_invalid_model_type(mock_optimizer, mock_loss_func, mock_tb_logger
     trainer = Trainer(invalid_model, mock_data_loader, mock_data_loader, mock_tb_logger)
 
     with pytest.raises(ValueError, match="model with type .* must be a subclass of BaseModel"):
-        trainer.train(hparams, mock_loss_func, mock_optimizer)
+        trainer.train(mock_loss_func, mock_optimizer, **hparams)
 
 def test_train_invalid_optimizer_type(mock_model, mock_loss_func, mock_tb_logger, mock_data_loader):
     """
@@ -140,7 +140,7 @@ def test_train_invalid_optimizer_type(mock_model, mock_loss_func, mock_tb_logger
     trainer = Trainer(mock_model, mock_data_loader, mock_data_loader, mock_tb_logger)
 
     with pytest.raises(ValueError, match="Optimizer must be an instance of TotalOptimizer"):
-        trainer.train(hparams, mock_loss_func, invalid_optimizer)
+        trainer.train(mock_loss_func, invalid_optimizer, **hparams)
 
 def test_train_override_instance_errors(mock_loss_func, mock_tb_logger, mock_data_loader):
     """
@@ -160,7 +160,7 @@ def test_train_override_instance_errors(mock_loss_func, mock_tb_logger, mock_dat
     trainer = Trainer(invalid_model, mock_data_loader, mock_data_loader, mock_tb_logger)
 
     # This should not raise a ValueError because of the override flag
-    trainer.train(hparams, mock_loss_func, invalid_optimizer, override_instance_errors=True)
+    trainer.train(mock_loss_func, invalid_optimizer, override_instance_errors=True, **hparams)
 
     # Assert that the training still proceeded for one epoch
     assert invalid_model.train.call_count == 1

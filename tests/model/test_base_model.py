@@ -9,7 +9,7 @@ class SimpleModel(BaseModel):
     A simple implementation of the BaseModel for testing purposes.
     """
 
-    def __init__(self, hparams, use_lazy=False, use_layernorm=False):
+    def __init__(self, hparams, use_lazy=False, use_layernorm=False, **kwargs):
         super().__init__()
         self.hparams = hparams
         if use_lazy:
@@ -131,7 +131,7 @@ def test_proper_weight_init_kaiming_vs_xavier(hparams):
     """
     # More ReLU-like activations -> Kaiming
     class KaimingModel(BaseModel):
-        def __init__(self, hparams):
+        def __init__(self, hparams, **kwargs):
             super().__init__()
             self.hparams = hparams
             self.fc1 = nn.Linear(hparams['input_dim'], 128)
@@ -151,7 +151,7 @@ def test_proper_weight_init_kaiming_vs_xavier(hparams):
 
     # More Sigmoid-like activations -> Xavier
     class XavierModel(BaseModel):
-        def __init__(self, hparams):
+        def __init__(self, hparams, **kwargs):
             super().__init__()
             self.hparams = hparams
             self.fc1 = nn.Linear(hparams['input_dim'], 128)

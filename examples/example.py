@@ -135,7 +135,7 @@ if __name__ == "__main__":
         "learning_rate": 1e-3,
         "batch_size": 64,
         "epochs": 2,
-        "optimizer": "Adam",
+        "optimizer_method": "Adam",
     }
 
     # create model
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     trainer = Trainer(model, train_loader, val_loader)
 
     # train model
-    trainer.train(hparams, criterion, optimizer)
+    trainer.train(criterion, optimizer, **hparams)
 
     # initialize evaluator
     evaluator = MnistAccEvaluator()

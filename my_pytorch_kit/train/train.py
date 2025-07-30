@@ -44,24 +44,31 @@ class Trainer:
 
 
 
-    def train(self, hparams, loss_func, optimizer, name="model", override_instance_errors=False) -> float:
+    def train(self, loss_func, optimizer,
+              epochs=10,
+              loss_cutoff_rate=0.1,
+              patience=None,
+              name="model",
+              override_instance_errors=False, **kwargs) -> float:
         """
         Train a model and log loss to tensorboard.
         If interrupted by KeyboardInterrupt, exit gracefully.
         Also compatible with torch.nn.Model as a model and torch.optim.Optimizer as an optimizer,
         if override_instance_errors is True.
-        Uses hparams["epochs"] and hparams["loss_cutoff_rate"], if not given, defaults are 10 and 0.1 respectively.
-        If hparames["patience"] is given, use early stopping with given patience.
         Returns best validation loss.
 
         Parameters
         ----------
-        hparams: dict
-            Hyperparameters.
         loss_func: torch.nn.Module
             The loss function.
         optimizer: torch.optim.Optimizer
             The optimizer.
+        epochs: int
+            The number of epochs to train for. (default: 10)
+        loss_cutoff_rate: float
+            The rate at which to cut off the loss. (default: 0.1)
+        patience: int
+            The number of epochs to wait before early stopping. (default: None)
         name: str
             The name of the model.
         override_instance_errors: bool
@@ -73,9 +80,6 @@ class Trainer:
             The best validation loss.
         """
 
-        DEFAULT_EPOCHS = 10
-        DEFAULT_LOSS_CUTOFF_RATE = 0.1
-
         if not issubclass(type(self.model), BaseModel) and not override_instance_errors:
             raise ValueError(f"model with type {type(self.model)} must be a subclass of BaseModel")
 
@@ -84,11 +88,7 @@ class Trainer:
                 raise ValueError("Optimizer must be an instance of TotalOptimizer")
             self.isTotalOptimizer = False
 
-        epochs = hparams.get("epochs", DEFAULT_EPOCHS)
-
-        loss_cutoff = int(len(self.train_loader) * hparams.get("loss_cutoff_rate", DEFAULT_LOSS_CUTOFF_RATE))
-
-        patience = hparams.get("patience", None) 
+        loss_cutoff = int(len(self.train_loader) * loss_cutoff_rate)
         patience_counter = 0
         best_val_loss = float('inf')
 
