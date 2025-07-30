@@ -17,6 +17,7 @@ class BaseModel(nn.Module):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         init_signature = inspect.signature(cls.__init__)
+        parameters = list(init_signature.parameters.values())
 
         # Check if the __init__ method accepts variable keyword arguments (**kwargs)
         if not any(param.kind == inspect.Parameter.VAR_KEYWORD
@@ -25,6 +26,19 @@ class BaseModel(nn.Module):
                 "\nPlease add **kwargs to the __init__ method."+\
                 "\nThis is because the Tuner needs to be able to initialize different models."
             raise TypeError(error)
+
+        # Check all parameters after 'self'
+        # The first parameter is expected to be 'self'
+        for param in parameters[1:]:
+            # Disallow positional-only and positional-or-keyword arguments
+            if param.kind in (
+                inspect.Parameter.POSITIONAL_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            ):
+                raise TypeError(
+                    f"The __init__ method of '{cls.__name__}' can only have "
+                    f"keyword-only arguments, but '{param.name}' is not."
+                )
 
     @abstractmethod
     def calc_loss(self, batch, criterion, **kwargs) -> torch.Tensor:
