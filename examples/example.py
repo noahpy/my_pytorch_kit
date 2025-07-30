@@ -140,6 +140,7 @@ if __name__ == "__main__":
         "epochs": 2,
         "optimizer_method": "Adam",
         "optimizer_kwargs": {"weight_decay": 1e-4},
+        "loss_func": nn.CrossEntropyLoss(),
     }
 
     # create model
@@ -150,9 +151,6 @@ if __name__ == "__main__":
     # intialize dataloaders
     train_loader, val_loader, test_loader = get_mnist_loaders(hparams["batch_size"])
 
-    # initialize loss criterion
-    criterion = nn.CrossEntropyLoss()
-
     # intialize TotalOptimizer (includes optional scheduler and gradient clipping)
     optimizer = get_optimizer_total_optimizer(model, use_scheduler=False, use_grad_clip=False, **hparams)
 
@@ -160,7 +158,7 @@ if __name__ == "__main__":
     trainer = Trainer(model, train_loader, val_loader)
 
     # train model
-    trainer.train(criterion, optimizer, **hparams)
+    trainer.train(optimizer, **hparams)
 
     # initialize evaluator
     evaluator = MnistAccEvaluator()
