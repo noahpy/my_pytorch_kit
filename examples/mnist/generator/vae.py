@@ -2,7 +2,7 @@
 import torch.nn as nn
 import torchsummary
 
-from my_pytorch_kit.model.vae import ImageVAE as VAE
+from my_pytorch_kit.model.vae import ImageVAE
 from my_pytorch_kit.model.vae import ImageVAESemiSupervised
 from my_pytorch_kit.train.train import Trainer
 from my_pytorch_kit.train.optimizers import get_optimizer_total_optimizer

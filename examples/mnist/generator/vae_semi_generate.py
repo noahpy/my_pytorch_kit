@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     model = ImageVAESemiSupervised(**hparams)
 
-    model.load_model("models/vae.pt")
+    model.load_model("models/vae_semi_3.pt")
 
     generate_samples(model)
 
