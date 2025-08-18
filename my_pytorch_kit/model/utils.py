@@ -124,6 +124,10 @@ class ConvArchitect:
         in_c, in_h, in_w = input_shape
         out_c, out_h, out_w = output_shape
 
+        # detect mixed-mode transforms
+        if (in_h < out_h and in_w > out_w) or (in_h > out_h and in_w < out_w):
+            raise ValueError("Mixed-mode transforms are not supported. Try using a different architecture.")
+
         # Determine if we are encoding (shrinking) or decoding (expanding)
         # This assumes a consistent transformation across the network
         mode = 'encoder' if out_h < in_h else 'decoder'
