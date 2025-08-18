@@ -1,6 +1,5 @@
 *.egg-info/
 build/
-models/
 .venv/
 .python-version/
 __pycache__/

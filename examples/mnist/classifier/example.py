@@ -8,13 +8,13 @@ by training a simple model on the MNIST dataset.
 
 import torch.nn as nn
 import torch
-from torchvision.datasets import MNIST
-import torchvision
 
 from my_pytorch_kit.model.models import BaseModel
 from my_pytorch_kit.train.train import Trainer
 from my_pytorch_kit.evaluation.evaluation import Evaluator
 from my_pytorch_kit.train.optimizers import get_optimizer_total_optimizer
+
+from mnist.utils.mnist_utils import get_mnist_loaders
 
 class MyMnistModel(BaseModel):
     """
@@ -94,38 +94,6 @@ class MnistAccEvaluator(Evaluator):
 
     def on_eval(self):
         self.batch_count = 0
-
-
-def get_mnist_loaders(batch_size=64):
-    """
-    Download MNIST dataset and split into train, val, test.
-    """
-    mnist_train_dataset = MNIST(
-        root="data",
-        train=True,
-        download=True,
-        transform=torchvision.transforms.ToTensor(),
-    )
-    mnist_test_dataset = MNIST(
-        root="data",
-        train=False,
-        download=True,
-        transform=torchvision.transforms.ToTensor(),
-    )
-    train_subset, val_subset = torch.utils.data.random_split(
-        mnist_train_dataset, [50000, 10000]
-    )
-
-    train_loader = torch.utils.data.DataLoader(
-        train_subset, batch_size=batch_size, shuffle=True
-    )
-    val_loader = torch.utils.data.DataLoader(val_subset, batch_size=batch_size, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        mnist_test_dataset, batch_size=3, shuffle=True
-    )
-
-    return train_loader, val_loader, test_loader
-
 
 #++++++++++++++  Here comes the main code ++++++++++++++++#
 

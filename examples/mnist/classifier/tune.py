@@ -7,9 +7,9 @@ by training a simple model on the MNIST dataset.
 """
 
 import torch.nn as nn
-import torch
 
-from example import MyMnistModel, MnistAccEvaluator, get_mnist_loaders
+from mnist.classifier.example import MyMnistModel, MnistAccEvaluator
+from mnist.utils.mnist_utils import get_mnist_loaders
 from my_pytorch_kit.train.tune import Tuner
 
 

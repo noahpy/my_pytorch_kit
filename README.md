@@ -3,6 +3,7 @@
 ## My Pytorch Toolkit
 Userful pytorch toolkit for training models, replacing boilerplate code.
 Provides functions for training, modeling and evaluating models.
+Also provides several architecture implementations.
 
 ## Installation
 ### From PyPI
@@ -30,11 +31,14 @@ graph TD
         F["evaluator.evaluate()"]
         G["<b>Intitialize Tuner</b><br/>(Hyperparameter Tuning)"]
         H["tuner.tune()"]
+        I["<b>Provided Architectures</b><br/>(Classifier, AE, VAE, ...)"]
+
     end
 
     %% Define node relationships
     A --> C
     B --> C
+    I --> A
     A --> D
     B --> D
     C --> E
@@ -54,7 +58,13 @@ graph TD
     style H fill:#cfc,stroke:#333,stroke-width:2px
 ```
 
-For a **detailed** guide, see the `examples/example.py` file :)
+Furthermore, this package provides architecture implementations and modelling utilities.
+Currently implemented architectures include:
+- Classifiier
+- Autoencoder
+- Variational Autoencoder
+
+For an **initial** guide, see the `examples/mnist/classifier/example.py` file.
 
 
 ## Development

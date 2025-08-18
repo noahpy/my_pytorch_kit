@@ -121,6 +121,10 @@ class ImageVAESemiSupervised(ImageVAE):
         params = self.encoder(x)
         self.params = params
         z = self.sampler(params)
+        x_hat, y_hat = self.generate(z)
+        return x_hat, y_hat
+
+    def generate(self, z):
         x_hat = self.decoder(z)
         x_hat = self.sigmoid(x_hat)
         y_hat = self.classifier(z)
