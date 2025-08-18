@@ -5,12 +5,12 @@
 The convolutional **Encoder** returns a representation in the latent space, which is then used by the convolutional **Decoder** to reconstruct the input image.
 
 ## Usage
-The `ImageAE` class is implemented in the `my_pytorch_kit.models.ae` module.
+The `ImageAE` class is implemented in the [`my_pytorch_kit.model.ae`](../../my_pytorch_kit/model/ae) module.
 Import using:
 ```python
 from my_pytorch_kit.models.ae import ImageAE
 ```
-Their application on the MNIST dataset can be found in the `examples/mnist/autoencoder/ae.py` module.
+Their application on the MNIST dataset can be found in the [`examples/mnist/autoencoder/ae.py`](../../examples/mnist/autoencoder/ae.py) module.
 Enter the `examples` directory and run `python -m mnist.autoencoder.ae`.
 
 ## Results on MNIST

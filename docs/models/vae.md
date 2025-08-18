@@ -16,12 +16,12 @@ Furthermore, image generation can now be paired with a corresponding label.
 
 ## Usage
 
-The `ImageVAE` class and the `ImageVAESemiSupervised` class are both implemented in the `my_pytorch_kit.models.vae` module.
+The `ImageVAE` class and the `ImageVAESemiSupervised` class are both implemented in the [`my_pytorch_kit.model.vae`](../../my_pytorch_kit/model/vae.py) module.
 Import using:
 ```python
-from my_pytorch_kit.models.vae import ImageVAE, ImageVAESemiSupervised
+from my_pytorch_kit.model.vae import ImageVAE, ImageVAESemiSupervised
 ```
-Their application on the MNIST dataset can be found in the `examples/mnist/generator/vae.py` module.
+Their application on the MNIST dataset can be found in the [`examples/mnist/generator/vae.py`](../../examples/mnist/generator/vae.py) module.
 Enter the `examples` directory and run `python -m mnist.generator.vae`.
 
 ## Results on MNIST
