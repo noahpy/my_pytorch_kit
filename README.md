@@ -61,8 +61,8 @@ graph TD
 Furthermore, this package provides architecture implementations and modelling utilities.
 Currently implemented architectures include:
 - Classifiier
-- Autoencoder
-- Variational Autoencoder
+- [Autoencoder](docs/models/ae.md)
+- [Variational Autoencoder](docs/models/vae.md)
 
 For an **initial** guide, see the `examples/mnist/classifier/example.py` file.
 
