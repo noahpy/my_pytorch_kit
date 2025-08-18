@@ -4,6 +4,7 @@ import numpy as np
 from my_pytorch_kit.train.optimizers import TotalOptimizer
 from my_pytorch_kit.model.models import BaseModel
 from my_pytorch_kit.train.tensorboard import get_tensorboard_logger
+from typing import Callable, Optional
 
 def create_tqdm_bar(iterable, desc):
     return tqdm(enumerate(iterable), total=len(iterable), desc=desc, dynamic_ncols=True)
@@ -15,7 +16,15 @@ class Trainer:
     A class for training a model.
     """
 
-    def __init__(self, model, train_loader, val_loader, tb_logger = None, initialize_tb = True):
+    def __init__(self, 
+                 model: torch.nn.Module,
+                 train_loader: torch.utils.data.DataLoader,
+                 val_loader: torch.utils.data.DataLoader,
+                 tb_logger: Optional[torch.utils.tensorboard.SummaryWriter] = None,
+                 initialize_tb: bool = True,
+                 sample_input_shape: Optional[tuple] = None,
+                 **kwargs
+                 ):
         """
         Initialize the trainer.
 
@@ -31,6 +40,9 @@ class Trainer:
             The tensorboard logger.
         initialize_tb: bool
             Whether to initialize the tensorboard logger, if tb_logger is None.
+        sample_input_shape: tuple
+            The shape of the input to the model.
+            If given, will add a graph to the tensorboard logger.
         """
         self.model = model
         self.train_loader = train_loader
@@ -42,16 +54,22 @@ class Trainer:
 
         self.isTotalOptimizer = True
 
+        if sample_input_shape is not None:
+            self.tb_logger.add_graph(self.model, torch.randn(*sample_input_shape))
+        else:
+            print("Sample input shape not given. Not adding graph to tensorboard logger.")
 
 
     def train(self, 
-              optimizer,
-              loss_func,
-              epochs=10,
-              loss_cutoff_rate=0.1,
-              patience=None,
-              name="model",
-              override_instance_errors=False, **kwargs) -> float:
+              optimizer: TotalOptimizer,
+              loss_func: Callable,
+              epochs: int = 10,
+              loss_cutoff_rate: float = 0.1,
+              patience: Optional[int] = None,
+              epoch_function: Optional[Callable] = None,
+              name: str = "model",
+              override_instance_errors: bool = False,
+              **kwargs) -> float:
         """
         Train a model and log loss to tensorboard.
         If interrupted by KeyboardInterrupt, exit gracefully.
@@ -71,6 +89,16 @@ class Trainer:
             The rate at which to cut off the loss. (default: 0.1)
         patience: int
             The number of epochs to wait before early stopping. (default: None)
+        epoch_function: Callable
+            Function called after each epoch. (default: None)
+            Following named parameters are passed to it:
+                - epoch: int
+                - epochs: int
+                - model: model
+                - lr: learning rate
+                - tl: training loss
+                - vl: validation loss
+                - kwargs: kwargs passed to this initializer
         name: str
             The name of the model.
         override_instance_errors: bool
@@ -146,6 +174,17 @@ class Trainer:
                 if patience is not None and patience_counter >= patience:
                     print(f"Early stopping at epoch {epoch + 1}.")
                     break
+
+                if epoch_function:
+                    epoch_function(
+                        epoch = epoch,
+                        epochs = epochs,
+                        model = self.model,
+                        lr = optimizer.optimizer.param_groups[0]['lr'],
+                        tl = np.mean(training_loss),
+                        vl = np.mean(validation_loss),
+                        **kwargs
+                    )
 
 
         except KeyboardInterrupt:
