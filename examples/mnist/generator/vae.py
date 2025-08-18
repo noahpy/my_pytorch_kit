@@ -39,6 +39,7 @@ if __name__ == '__main__':
     }
 
     model = ImageVAESemiSupervised(**hparams)
+    # model = ImageVAE(**hparams)
 
     torchsummary.summary(model, (1, 28, 28))
 
