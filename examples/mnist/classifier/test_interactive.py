@@ -7,6 +7,7 @@ import tkinter as tk
 from PIL import Image, ImageDraw, ImageOps
 import numpy as np
 from mnist.classifier.example import MyMnistModel
+from my_pytorch_kit.model.classifier import ImageClassifier
 import matplotlib.pyplot as plt
 
 
@@ -53,12 +54,12 @@ class DrawingApp:
 
         transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
+            # transforms.Normalize((0.1307,), (0.3081,))
         ])
         img_tensor = transform(img).unsqueeze(0)
         # plt.imshow(img_tensor[0].view(28, 28), cmap="gray")
         # plt.show()
-        img_tensor = img_tensor.view(1, 784)
+        img_tensor = img_tensor.view(1, 1, 28, 28)
 
         with torch.no_grad():
             output = self.model(img_tensor)
@@ -89,8 +90,11 @@ def interactive_test_set(model):
 
 # 4. Run the Application
 if __name__ == "__main__":
-    model = MyMnistModel()
-    model.load_model("models/model.pt")
+    hparams = {
+        "feature_space": (64, 7, 7),
+    }
+    model = ImageClassifier(**hparams)
+    model.load_model("models/classifier.pt")
     # interactive_test_set(model)
     root = tk.Tk()
     app = DrawingApp(root, model)
