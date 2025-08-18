@@ -18,7 +18,7 @@ Then, you can import the module `my_pytorch_kit`.
 
 ## Usage
 
-This package revolves around the `BaseModel`, `Trainer` and `Evaluator` classes, which are extended to model, train and evaluate a model respectively.  
+This package revolves around the [`BaseModel`](my_pytorch_kit/model/models.py), [`Trainer`](my_pytorch_kit/train/train.py) and [`Evaluator`](my_pytorch_kit/evaluation/evaluation.py) classes, which are extended to model, train and evaluate a model respectively.  
 ```mermaid
 graph TD
     subgraph "Usage Workflow"
@@ -63,6 +63,8 @@ Currently implemented architectures include:
 - [Classifier](docs/models/classifier.md)
 - [Autoencoder](docs/models/ae.md)
 - [Variational Autoencoder](docs/models/vae.md)
+
+Lastly the [`Tuner`](my_pytorch_kit/train/tune.py) class provides hyperparameter tuning using grid, random and random dynamic search.
 
 For an **initial** guide, see the [`examples/mnist/classifier/example.py`](examples/mnist/classifier/example.py) file.
 

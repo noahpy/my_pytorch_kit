@@ -8,10 +8,13 @@ from itertools import product
 from my_pytorch_kit.train.train import Trainer
 from my_pytorch_kit.train.optimizers import get_optimizer_total_optimizer
 
+
 class Tuner:
     """
     Class for hyperparameter tuning.
     Call tune() for hyper parameter search.
+
+    For an example application, see examples/mnist/classifier/tune.py!
     """
 
     ALLOWED_RANDOM_SEARCH_PARAMS = ['log', 'int', 'float', 'item', 'logint']
