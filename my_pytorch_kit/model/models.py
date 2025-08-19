@@ -3,6 +3,7 @@ import torch.nn as nn
 from abc import abstractmethod
 import os
 import inspect
+from typing import Optional
 
 class BaseModel(nn.Module):
     """
@@ -131,29 +132,47 @@ class BaseModel(nn.Module):
                 nn.init.zeros_(param)  # Always initialize biases to zero
 
 
-    def save_model(self, path):
+    def save_model(self, path, hparams=None):
         """
         Save models state to given path.
+        Will also safe hyperparameters if provided.
         Will create directories if necessary.
 
         Parameters
         ----------
         path: str
             Path to save model to.
+        hparams: dict
+            Dictionary of hyperparameters.
         """
 
         base_dir = os.path.dirname(path)
         if not os.path.exists(base_dir):
             os.makedirs(base_dir)
-        torch.save(self.state_dict(), path)
 
-    def load_model(self, path):
+        if hparams is None:
+            torch.save(self.state_dict(), path)
+        else:
+            torch.save({"state_dict": self.state_dict(), "hparams": hparams}, path)
+
+    def load_model(self, path) -> Optional[dict]:
         """
         Load model from given path.
+        Will return hyperparameters if the model was saved with them.
 
         Parameters
         ----------
         path: str
             Path to load model from.
         """
-        self.load_state_dict(torch.load(path))
+        obj = torch.load(path, weights_only=False)
+        hparams = None
+        if "hparams" in obj:
+            hparams = obj["hparams"]
+            self.__init__(**hparams)
+            state_dict = obj["state_dict"]
+        else:
+            state_dict = obj
+        self.load_state_dict(state_dict)
+
+        return hparams
