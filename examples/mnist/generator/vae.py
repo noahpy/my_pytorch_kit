@@ -22,20 +22,20 @@ if __name__ == '__main__':
     hparams = {
         "learning_rate": 1e-3,
         "batch_size": 64,
-        "epochs": 30,
+        "epochs": 15,
         "optimizer_method": "Adam",
         # "optimizer_kwargs": {"weight_decay": 1e-4},
         "loss_func": nn.BCELoss(reduction="sum"),
         "alpha": 1e-1,
-        "beta": 1e-3,
+        "beta": 1.5e-3,
         "classifier_loss_weight": 1.2,
         "start_beta": 1e-3,
         "final_beta": 4e-2,
         "feature_space": (64, 7, 7),
-        "latent_dim": 2,
+        "latent_dim": 4,
         "sample_input_shape": (1, 1, 28, 28),
         "classifier_num_layers": 3,
-        "epoch_function": kl_annealing
+        # "epoch_function": kl_annealing
     }
 
     model = ImageVAESemiSupervised(**hparams)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
         trainer.train(optimizer, **hparams)
 
-        model.save_model("models/vae.pt")
+        model.save_model("models/vae.pt", hparams)
 
     else:
         model.load_model("models/vae.pt")
