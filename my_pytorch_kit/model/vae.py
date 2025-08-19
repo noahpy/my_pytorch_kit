@@ -115,6 +115,7 @@ class ImageVAESemiSupervised(ImageVAE):
         self.classifier_num_classes = num_classes
         self.classifier_loss_weight = classifier_loss_weight
         self.classifier = AffineArchitect().build(latent_dim, num_classes, classifier_activation, classifier_num_layers)
+        self.cel = nn.CrossEntropyLoss()
 
 
     def forward(self, x):
@@ -128,7 +129,6 @@ class ImageVAESemiSupervised(ImageVAE):
         x_hat = self.decoder(z)
         x_hat = self.sigmoid(x_hat)
         y_hat = self.classifier(z)
-        y_hat = self.sigmoid(y_hat)
         return x_hat, y_hat
 
 
@@ -139,7 +139,7 @@ class ImageVAESemiSupervised(ImageVAE):
         kl_div = self.kl_loss(self.params)
 
         one_hot = nn.functional.one_hot(y, self.classifier_num_classes).float()
-        classifier_loss = criterion(y_hat, one_hot)
+        classifier_loss = self.cel(y_hat, one_hot)
 
         batch_size = x.size(0)
         loss = (self.alpha * reconstruction_loss / batch_size) + (self.beta * kl_div / batch_size) + (self.classifier_loss_weight * classifier_loss / batch_size)
