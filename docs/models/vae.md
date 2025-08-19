@@ -27,6 +27,7 @@ Enter the `examples` directory and run `python -m mnist.generator.vae`.
 ## Results on MNIST
 
 The `ImageVAE` class has been configured with three convolutional layers.
+To allow for simple plotting of the latent space, its dimension has been set to 2.
 For details on the exact model, you can load the model from `exaples/models/vae_model_1.pt`.
 Below are plots on the reconstruction (test set), label clusters (test set) and image generated from the latent space repectively.
 
@@ -56,4 +57,11 @@ Finally, we have generated images from this model, as seen in `exaples/mnist/gen
 
 <p align="middle">
   <img src="../assets/vae_4_generation.png" width="500" />
+</p>
+
+After generating a full dataset, we can observe that reconstruction loss on autoencoders are significantly lower than random inputs, yet still enough to distinct the real MNIST dataset from it.
+A semi-supervised approach using OoD detection of autoencoders might be interesting as well.
+
+<p align="middle">
+  <img src="../assets/ae_ood_with_noise.png" width="500" />
 </p>
