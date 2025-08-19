@@ -4,7 +4,7 @@ from my_pytorch_kit.evaluation.evaluation import Evaluator
 
 class ReconstructionEvaluator(Evaluator):
 
-    def __init__(self, criterion):
+    def __init__(self, criterion, only_accumulate=False):
         """
         Parameters
         ----------
@@ -15,6 +15,7 @@ class ReconstructionEvaluator(Evaluator):
         self.acc = 0
         self.batch_count = 0
         self.criterion = criterion
+        self.only_accumulate = only_accumulate
 
     def evaluate_batch(self, model, batch):
         if isinstance(batch, tuple) or isinstance(batch, list):
@@ -26,6 +27,9 @@ class ReconstructionEvaluator(Evaluator):
         return loss
 
     def accumulate_result(self, result):
+        if self.only_accumulate:
+            self.acc.append(result.item())
+            return
         self.batch_count += 1
         self.acc = (self.acc * (self.batch_count - 1) + result) / self.batch_count
 
@@ -33,5 +37,8 @@ class ReconstructionEvaluator(Evaluator):
         return self.acc
 
     def on_eval(self):
-        self.acc = 0
+        if self.only_accumulate:
+            self.acc = []
+        else:
+            self.acc = 0
         self.batch_count = 0
