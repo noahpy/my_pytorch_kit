@@ -62,7 +62,7 @@ Furthermore, this package provides architecture implementations and modelling ut
 Currently implemented architectures include:
 - [Classifier](docs/models/classifier.md)
 - [Autoencoder](docs/models/ae.md)
-- [Variational Autoencoder](docs/models/vae.md)
+- [Variational Autoencoder, Semi-supervised VAE](docs/models/vae.md)
 
 Lastly the [`Tuner`](my_pytorch_kit/train/tune.py) class provides hyperparameter tuning using grid, random and random dynamic search.
 
