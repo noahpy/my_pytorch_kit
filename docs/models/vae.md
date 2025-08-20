@@ -21,8 +21,8 @@ Import using:
 ```python
 from my_pytorch_kit.model.vae import ImageVAE, ImageVAESemiSupervised
 ```
-Their application on the MNIST dataset can be found in the [`examples/mnist/generator/vae.py`](../../examples/mnist/generator/vae.py) module.
-Enter the `examples` directory and run `python -m mnist.generator.vae`.
+Their application on the MNIST dataset can be found in the [`examples/mnist/vae/vae.py`](../../examples/mnist/vae/vae.py) module.
+Enter the `examples` directory and run `python -m mnist.vae.vae`.
 
 ## Results on MNIST
 
@@ -52,16 +52,18 @@ For details on the exact model, you can load the model from `exaples/models/vae_
 
 We can now see that the representation of the labels in the latent space are distinct, the generation of images as well, picking up on more detailed features per category.
 
-Finally, we have generated images from this model, as seen in `exaples/mnist/generator/vae_semi_generate.py`.
+Finally, we have generated images from this model, as seen in [`examples/mnist/vae/vae_semi_generate.py`](../../examples/mnist/vae/vae_semi_generate.py).
 
 
 <p align="middle">
   <img src="../assets/vae_4_generation.png" width="500" />
 </p>
 
-After generating a full dataset, we can observe that reconstruction loss on autoencoders are significantly lower than random inputs, yet still enough to distinct the real MNIST dataset from it.
+After generating a full dataset, we can observe in the plot below that reconstruction loss on autoencoders are significantly lower than random inputs, yet still enough to distinct the real MNIST dataset from it.
 A semi-supervised approach using OoD detection of autoencoders might be interesting as well.
 
 <p align="middle">
   <img src="../assets/ae_ood_with_noise.png" width="500" />
 </p>
+
+This plot has been generated using [`examples/mnist/autoencoder/ae_ood.py`](../../examples/mnist/autoencoder/ae_ood.py).
