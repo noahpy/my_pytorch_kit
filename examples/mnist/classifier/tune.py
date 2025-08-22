@@ -85,7 +85,8 @@ if __name__ == "__main__":
                                              num_search=num_search,
                                              ranks_considered=ranks_considered,
                                              check_multiplicant=check_multiplier,
-                                             mode='dynamic')
+                                             mode='dynamic',
+                                             model_path='models/mnist_random_dynamic_')
 
     result = evaluator.evaluate(model, test_loader)
     print(f"Model accuracy on test set doing random dynamic search: {result*100:.2f}%")
