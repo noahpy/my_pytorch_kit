@@ -4,12 +4,24 @@ import matplotlib.pyplot as plt
 import os
 
 from my_pytorch_kit.model.vae import ImageVAESemiSupervised
+from my_pytorch_kit.model.classifier import ImageClassifier
+from my_pytorch_kit.model.ae import ImageAE
 
-def generate_samples(model, latent_dim, num_samples=20):
+def generate_samples(model, latent_dim, num_samples=20, check_classifier=False, check_ae=False):
     """
     Generates num_samples samples from the model,
     plotting them in a grid with their labels
     """
+
+    classifier = None
+    if check_classifier:
+        classifier = ImageClassifier()
+        classifier.load_model("models/classifier.pt")
+
+    ae = None
+    if check_ae:
+        ae = ImageAE()
+        ae.load_model("models/ae.pt")
 
     num_samples = int(num_samples)
     n_rows = num_samples // 10
@@ -20,13 +32,40 @@ def generate_samples(model, latent_dim, num_samples=20):
         z = torch.randn((num_samples, latent_dim))
         images, labels = model.generate(z)
 
+        cl_labels = None
+        if classifier:
+            cl_labels = classifier(images)
+            cl_labels = torch.argmax(cl_labels, dim=1)
+
+        batch_recon_losses = None
+        if ae:
+            reconstruction = ae(images)
+            recon_losses = torch.nn.BCELoss(reduction="none")(reconstruction, images)
+            batch_recon_losses = recon_losses.mean(dim=(1, 2, 3))
+
         plt.figure(figsize=(10, 10))
         for i in range(num_samples):
             plt.subplot(n_rows, n_cols, i + 1)
             plt.imshow(images[i].view(28, 28).cpu().numpy(), cmap="Greys_r")
-            label = torch.argmax(labels[i]).item()
+            label = f"{torch.argmax(labels[i]).item()}"
+            if cl_labels is not None:
+                label += f" ({cl_labels[i].item()})"
+            if recon_losses is not None:
+                label += f" ({batch_recon_losses[i].item():.2f})"
+
             plt.title(label)
             plt.axis("off")
+
+        extra_text = "Generator label"
+        if cl_labels is not None:
+            extra_text += " (Classifier label)"
+        if recon_losses is not None:
+            extra_text += " (Reconstruction loss)"
+        plt.text(-100, 50, extra_text, ha="center", va="center")
+
+        print(labels.shape, cl_labels.shape)
+        print(torch.nn.CrossEntropyLoss()(labels, cl_labels).item())
+
         plt.show()
 
 
@@ -74,9 +113,9 @@ if __name__ == '__main__':
 
     model = ImageVAESemiSupervised(**hparams)
 
-    model.load_model("models/vae_semi_3.pt")
+    model.load_model("models/vae.pt")
 
-    generate_samples(model, hparams["latent_dim"])
+    generate_samples(model, hparams["latent_dim"], check_classifier=True, check_ae=True)
 
     gen_dataset = input("Generate dataset? (y/[n]): ").lower() == "y"
 
