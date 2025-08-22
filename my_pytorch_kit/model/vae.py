@@ -47,6 +47,7 @@ class ImageVAE(BaseModel):
 
         self.alpha = alpha
         self.beta = beta
+        self.loss_softmax = nn.Softmax()
 
         self.encoder = VariationalEncoder(input_shape, encoder_num_layers, latent_dim, feature_space)
         self.decoder = VariationalDecoder(input_shape, decoder_num_layers, latent_dim, feature_space)
@@ -68,9 +69,20 @@ class ImageVAE(BaseModel):
         kl_div = self.kl_loss(self.params)
 
         batch_size = x.size(0)
-        loss = (self.alpha * reconstruction_loss / batch_size) + (self.beta * kl_div / batch_size)
+        alpha, beta = self.loss_softmax(torch.tensor([self.alpha, self.beta], dtype=float)).split(1)
 
-        return loss
+        reconstruction_loss = reconstruction_loss * alpha / batch_size
+        kl_div = kl_div * beta / batch_size
+
+        loss = reconstruction_loss + kl_div
+
+        loss_dict = {
+            "loss": loss,
+            "reconstruction_loss": reconstruction_loss,
+            "kl_div": kl_div
+        }
+
+        return loss_dict
 
     def kl_loss(self, params):
         """
@@ -144,6 +156,8 @@ class ImageVAESemiSupervised(ImageVAE):
         self.classifier = AffineArchitect().build(latent_dim, num_classes, classifier_activation, classifier_num_layers)
         self.cel = nn.CrossEntropyLoss()
 
+        self.proper_weight_init()
+
 
     def forward(self, x):
         params = self.encoder(x)
@@ -162,12 +176,18 @@ class ImageVAESemiSupervised(ImageVAE):
     def calc_loss(self, batch, criterion):
         x, y = batch
         x_hat, y_hat = self.forward(x)
-        batch_size = x.size(0)
-        reconstruction_loss = criterion(x_hat, x) * self.alpha / batch_size
-        kl_div = self.kl_loss(self.params) * self.beta / batch_size
 
+        reconstruction_loss = criterion(x_hat, x)
+        kl_div = self.kl_loss(self.params)
         one_hot = nn.functional.one_hot(y, self.classifier_num_classes).float()
-        classifier_loss = self.cel(y_hat, one_hot) * self.classifier_loss_weight / batch_size
+        classifier_loss = self.cel(y_hat, one_hot)
+
+        batch_size = x.size(0)
+        alpha, beta, classifier_loss_weight = self.loss_softmax(torch.tensor([self.alpha, self.beta, self.classifier_loss_weight], dtype=float)).split(1)
+
+        reconstruction_loss = (alpha * reconstruction_loss / batch_size)
+        kl_div = (beta * kl_div / batch_size)
+        classifier_loss = (classifier_loss_weight * classifier_loss / batch_size)
 
         loss = reconstruction_loss + kl_div + classifier_loss
 
@@ -261,11 +281,18 @@ class ImageVAEwithAE(ImageVAE):
         x, _ = batch
         x_hat = self.forward(x)
 
+        # get losses
+        reconstruction_loss = criterion(x_hat, x)
+        kl_div = self.kl_loss(self.params)
+        ae_recon_loss = self.ae_criterion(self.ae(x_hat), x_hat)
+
+        alpha, beta, ae_loss_weight = self.loss_softmax(torch.tensor([self.alpha, self.beta, self.ae_loss_weight], dtype=float)).split(1)
         batch_size = x.size(0)
 
-        reconstruction_loss = criterion(x_hat, x) * self.alpha / batch_size
-        kl_div = self.kl_loss(self.params) * self.beta / batch_size
-        ae_recon_loss = self.ae_criterion(self.ae(x_hat), x_hat) * self.ae_loss_weight / batch_size
+        # then weight it
+        reconstruction_loss = reconstruction_loss * alpha / batch_size
+        kl_div = kl_div * beta / batch_size
+        ae_recon_loss = ae_recon_loss * ae_loss_weight / batch_size
 
         loss = reconstruction_loss + kl_div + ae_recon_loss
 
