@@ -56,9 +56,6 @@ class Trainer:
 
         if sample_input_shape is not None:
             self.tb_logger.add_graph(self.model, torch.randn(*sample_input_shape))
-        else:
-            print("Sample input shape not given. Not adding graph to tensorboard logger.")
-
 
     def train(self, 
               optimizer: TotalOptimizer,

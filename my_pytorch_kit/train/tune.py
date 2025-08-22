@@ -4,8 +4,11 @@ from math import log10
 from typing import List, Dict, Tuple
 import torch
 from itertools import product
+import pprint
+import os
 
 from my_pytorch_kit.train.train import Trainer
+from my_pytorch_kit.evaluation.evaluation import Evaluator
 from my_pytorch_kit.train.optimizers import get_optimizer_total_optimizer
 
 
@@ -24,7 +27,13 @@ class Tuner:
         self.trainer_class = trainer_class
 
 
-    def tune(self, train_loader, val_loader, parameter_space, mode = 'grid', **kwargs):
+    def tune(self,
+             train_loader: torch.utils.data.DataLoader,
+             val_loader: torch.utils.data.DataLoader,
+             parameter_space: Dict[str, List] | Dict[str, Tuple[List, str]],
+             mode: str = 'grid',
+             evaluator: Evaluator = None,
+             **kwargs):
         """
         Calls the appropriate search method and returns the best model.
 
@@ -39,19 +48,34 @@ class Tuner:
             Should be Dict[str, List] or Dict[str, Tuple[List, str]].
         mode: str
             'grid', 'random' or 'dynamic'
+        evaluator: Evaluator
+            Evaluator class. Will be used instead of validation loss if given.
+            Its evaluate() should return a single metric.
+
+        Returns
+        -------
+        best_model: torch.nn.Module
+            The model performing best on validation set
+        best_config: dict
+            The hyperparameter config that performed best
+        results: list
+            List of tuples (config, val_loss)
         """
 
         if mode == 'grid':
-            return self.grid_search(train_loader, val_loader, parameter_space)
+            return self.grid_search(train_loader, val_loader, parameter_space, evaluator=evaluator)
         elif mode == 'random':
-            return self.random_search(train_loader, val_loader, parameter_space, **kwargs)
+            return self.random_search(train_loader, val_loader, parameter_space, evaluator=evaluator, **kwargs)
         elif mode == 'dynamic':
-            return self.random_dynamic_search(train_loader, val_loader, parameter_space, **kwargs)
+            return self.random_dynamic_search(train_loader, val_loader, parameter_space, evaluator=evaluator, **kwargs)
         else:
             raise ValueError("Invalid mode: {}".format(mode))
 
 
-    def grid_search(self, train_loader, val_loader, grid_search_spaces: Dict[str, List]):
+    def grid_search(self, train_loader,
+                    val_loader,
+                    grid_search_spaces: Dict[str, List],
+                    evaluator: Evaluator = None):
         """
         A simple grid search.
         Searches all combinations of hyperparameters in grid_search_spaces.
@@ -66,6 +90,9 @@ class Tuner:
             Hyperparameter search spaces for grid search.
             Specifies the possible values for each hyperparameter, e.g. 
             {'lr': [1e-3, 1e-4, 1e-5], 'batch_size': [32, 64, 128]}
+        evaluator: Evaluator
+            Evaluator class. Will be used instead of validation loss if given.
+            Its evaluate() should return a single metric.
 
         Returns
         -------
@@ -86,12 +113,15 @@ class Tuner:
         for instance in product(*grid_search_spaces.values()):
             configs.append(dict(zip(grid_search_spaces.keys(), instance)))
 
-        return self.find_best_config(configs, train_loader, val_loader)
+        return self.find_best_config(configs, train_loader, val_loader, evaluator)
 
 
-    def random_search(self, train_loader, val_loader, 
+    def random_search(self, train_loader,
+                      val_loader, 
                       random_search_spaces: Dict[str, Tuple[List, str]],
-                      num_search: int = 10, **kwargs):
+                      num_search: int = 10,
+                      evaluator: Evaluator = None,
+                      **kwargs):
         """
         Samples num_search hyper parameter sets within the provided search spaces
         and returns the best model.
@@ -106,6 +136,9 @@ class Tuner:
             Hyperparameter search spaces for random search
         num_search: int
             Number of hyperparameter configs to sample (default: 10)
+        evaluator: Evaluator
+            Evaluator class. Will be used instead of validation loss if given.
+            Its evaluate() should return a single metric.
 
         Returns
         -------
@@ -126,12 +159,16 @@ class Tuner:
         for _ in range(num_search):
             configs.append(self.random_search_spaces_to_config(random_search_spaces))
 
-        return self.find_best_config(configs, train_loader, val_loader)
+        return self.find_best_config(configs, train_loader, val_loader, evaluator)
 
     def random_dynamic_search(self, train_loader, val_loader, 
                               random_search_spaces: Dict[str, Tuple[List, str]],
-                              num_search=10, ranks_considered=15,
-                              check_multiplicant=2, **kwargs):
+                              num_search=10,
+                              ranks_considered=15,
+                              check_multiplicant=2,
+                              evaluator: Evaluator = None,
+                              model_path = None,
+                              **kwargs):
         """
         Samples num_search hyper parameter sets within the provided search space,
         reducing the search space dynamically by looking at the <ranks_considered> best results,
@@ -152,6 +189,12 @@ class Tuner:
             Number of best configs to consider
         check_multiplicant: int
             Multiplicant of ranks_considered
+        evaluator: Evaluator
+            Evaluator class. Will be used instead of validation loss if given.
+            Its evaluate() should return a single metric.
+        model_path : str
+            Saving path of the model. If given, saves all models in the ranking via
+            model_path<config_id>.pt.
 
         Returns
         -------
@@ -163,19 +206,48 @@ class Tuner:
             List of tuples (config, val_loss)
 
         """
+
+        # some preprocessing
+        for key, value in random_search_spaces.items():
+            if not isinstance(value, tuple):
+                random_search_spaces[key] = ([value], 'item')
+
         config_count = 0
         configs = []
 
-        # stores tuples of (val_loss, config, model)
+        # stores tuples of (val_loss, config, model, config_id)
         ranking = []
 
         configs.append(self.random_search_spaces_to_config(random_search_spaces))
 
         results = []
 
+        def update_ranking(ranking, val_loss, config, model, config_id):
+            ranking.append((val_loss, config, model, config_id))
+            ranking.sort(key=lambda x: x[0])
+            new_ranking = ranking[:ranks_considered]
+            dropped = ranking[ranks_considered:]
+
+            if model_path is not None:
+                for i in range(len(new_ranking)):
+                    file_name = model_path + str(new_ranking[i][3]) + ".pt"
+                    # check if the file already exists
+                    if not os.path.isfile(file_name):
+                        model.save_model(file_name)
+                for i in range(len(dropped)):
+                    file_name = model_path + str(dropped[i][3]) + ".pt"
+                    # delete the file if it exists
+                    if os.path.isfile(file_name):
+                        os.remove(file_name)
+            return new_ranking
+
+
         def print_ranking(ranking):
+            print("\n" + "-"*30 + " RANKING " + "-"*30)
             for i in range(len(ranking)):
-                print("Rank {} with best loss {:.4f}: {}".format(i + 1, ranking[i][0], ranking[i][1]))
+                print("Config #{}: Rank {} with best loss {:.4f}:".format(ranking[i][3], i + 1, ranking[i][0]))
+                pprint.pprint(ranking[i][1])
+            print("-"*69 + "\n")
 
         def adapt_search_space(ranking, random_search_space):
             for name, (rng, mode) in random_search_space.items():
@@ -183,15 +255,18 @@ class Tuner:
                     new_min = min(ranking, key=lambda x: x[1][name])[1][name]
                     new_max = max(ranking, key=lambda x: x[1][name])[1][name]
                     random_search_space[name] = ([new_min, new_max], mode)
-            print("New search space:", random_search_space)
+            print("New search space:")
+            pprint.pprint(random_search_space)
             return random_search_space
 
 
         while config_count < num_search:
             try:
                 config = configs[-1]
-                print("\nEvaluating Config #{} [of {}]:\n".format(
-                    (config_count), num_search), config)
+                print("\nEvaluating Config #{} [of {}]:".format(
+                    (config_count), num_search))
+                pprint.pprint(config)
+                print()
 
                 model = self.model_class(**config)
 
@@ -201,13 +276,13 @@ class Tuner:
 
                 val_loss = trainer.train(optimizer, **config)
 
+                if evaluator is not None:
+                    val_loss = evaluator.evaluate(model, val_loader)
+
                 # add into ranking
-                if len(ranking) == 0:
-                    ranking.append((val_loss, config, model))
-                else:
-                    ranking.append((val_loss, config, model))
-                    ranking.sort(key=lambda x: x[0])
-                    ranking = ranking[:ranks_considered]
+                update_ranking(ranking, val_loss, config, model, config_count)
+
+                results.append(val_loss)
 
                 print_ranking(ranking)
 
@@ -228,8 +303,12 @@ class Tuner:
         return best_model, best_config, list(zip(configs, results))
 
 
-    def find_best_config(self, configs: List[Dict], train_loader: torch.utils.data.DataLoader,
-                         val_loader: torch.utils.data.DataLoader) -> Tuple[torch.nn.Module, Dict, List]:
+    def find_best_config(self,
+                         configs: List[Dict],
+                         train_loader: torch.utils.data.DataLoader,
+                         val_loader: torch.utils.data.DataLoader,
+                         evaluator: Evaluator = None
+                         ) -> Tuple[torch.nn.Module, Dict, List]:
         """
         Get a list of hyperparameter configs for random search or grid search,
         trains a model on all configs and returns the one performing best
@@ -243,6 +322,9 @@ class Tuner:
             The training data loader.
         val_loader: torch.utils.data.DataLoader
             The validation data loader.
+        evaluator: Evaluator
+            Evaluator class. Will be used instead of validation loss if given.
+            Its evaluate() should return a single metric.
 
         Returns
         -------
@@ -271,6 +353,9 @@ class Tuner:
 
             val_loss = trainer.train(optimizer, **configs[i])
 
+            if evaluator is not None:
+                val_loss = evaluator.evaluate(model, val_loader)
+
             results.append(val_loss)
 
             if val_loss < best_val:
@@ -279,7 +364,7 @@ class Tuner:
                 best_model = model
 
 
-        print("\nSearch done. Best Val Loss = {}".format(best_val))
+        print("\nSearch done. Best Metric = {}".format(best_val))
         print("Best Config:", best_config)
         return best_model, best_config, list(zip(configs, results))
 
