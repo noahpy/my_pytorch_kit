@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
         trainer.train(optimizer, **hparams)
 
-        model.save_model("models/classifier.pt")
+        model.save_model("models/classifier.pt", hparams)
 
     else:
         model.load_model("models/classifier.pt")

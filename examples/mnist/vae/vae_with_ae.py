@@ -13,7 +13,6 @@ def kl_annealing(epoch, epochs, model, **kwargs):
     if epoch < kwargs["beta_start_delay"]:
         return
     model.beta = model.beta + (kwargs["final_beta"] - kwargs["start_beta"]) / (epochs - kwargs["beta_start_delay"])
-    print(f"Set beta to: {model.beta}")
 
 
 if __name__ == '__main__':
@@ -27,9 +26,9 @@ if __name__ == '__main__':
         "optimizer_method": "Adam",
         # "optimizer_kwargs": {"weight_decay": 1e-4},
         "loss_func": nn.BCELoss(reduction="sum"),
-        "alpha": 1e-1,
-        "beta": 1.5e-1,
-        "ae_reconstruction_loss_weight": 500,
+        "alpha": 3,
+        "beta": 1,
+        "ae_reconstruction_loss_weight": 1,
         "start_beta": 0,
         "final_beta": 3e-1,
         "beta_start_delay": 8,

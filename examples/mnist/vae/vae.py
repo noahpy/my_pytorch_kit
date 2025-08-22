@@ -20,25 +20,26 @@ if __name__ == '__main__':
     train = input("Train new model? (y/[n]) ").lower() == "y"
 
     hparams = {
-        "learning_rate": 1e-3,
+        "learning_rate": 3e-3,
         "batch_size": 64,
         "epochs": 15,
         "optimizer_method": "Adam",
         # "optimizer_kwargs": {"weight_decay": 1e-4},
         "loss_func": nn.BCELoss(reduction="sum"),
         "alpha": 1e-1,
-        "beta": 1.5e-3,
-        "classifier_loss_weight": 1.2,
+        "beta": 1.5e-1,
+        "classifier_loss_weight": 12,
         "start_beta": 1e-3,
         "final_beta": 4e-2,
         "feature_space": (64, 7, 7),
-        "latent_dim": 4,
+        "latent_dim": 2,
         "sample_input_shape": (1, 1, 28, 28),
         "classifier_num_layers": 3,
         # "epoch_function": kl_annealing
     }
 
     model = ImageVAESemiSupervised(**hparams)
+    model.proper_weight_init()
     # model = ImageVAE(**hparams)
 
     torchsummary.summary(model, (1, 28, 28))
