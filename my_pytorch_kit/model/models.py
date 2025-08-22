@@ -3,7 +3,7 @@ import torch.nn as nn
 from abc import abstractmethod
 import os
 import inspect
-from typing import Optional
+from typing import Optional, Union, Dict
 
 class BaseModel(nn.Module):
     """
@@ -42,7 +42,7 @@ class BaseModel(nn.Module):
                 )
 
     @abstractmethod
-    def calc_loss(self, batch, criterion, **kwargs) -> torch.Tensor | dict[str, torch.Tensor]:
+    def calc_loss(self, batch, criterion, **kwargs) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
         """
         Calculates the loss for a given batch and criterion.
 
