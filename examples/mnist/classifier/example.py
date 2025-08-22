@@ -92,7 +92,7 @@ class MnistAccEvaluator(Evaluator):
     def get_result(self):
         return self.result
 
-    def on_eval(self):
+    def on_eval(self, model):
         self.batch_count = 0
 
 #++++++++++++++  Here comes the main code ++++++++++++++++#

@@ -57,9 +57,14 @@ class Evaluator(nn.Module):
         pass
 
 
-    def on_eval(self):
+    def on_eval(self, model):
         """
         Gets called before evaluation begins.
+
+        Parameters
+        ----------
+        model: torch.nn.Module
+            The model to evaluate.
         """
         pass
 
@@ -80,7 +85,7 @@ class Evaluator(nn.Module):
         Any
             The result metric.
         """
-        self.on_eval()
+        self.on_eval(model)
         model.eval()
         for batch in data_loader:
             result = self.evaluate_batch(model, batch)

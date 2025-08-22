@@ -36,7 +36,7 @@ class ReconstructionEvaluator(Evaluator):
     def get_result(self):
         return self.acc
 
-    def on_eval(self):
+    def on_eval(self, model):
         if self.only_accumulate:
             self.acc = []
         else:
