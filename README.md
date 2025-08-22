@@ -19,44 +19,12 @@ Then, you can import the module `my_pytorch_kit`.
 ## Usage
 
 This package revolves around the [`BaseModel`](my_pytorch_kit/model/models.py), [`Trainer`](my_pytorch_kit/train/train.py) and [`Evaluator`](my_pytorch_kit/evaluation/evaluation.py) classes, which are extended to model, train and evaluate a model respectively.  
-```mermaid
-graph TD
-    subgraph "Usage Workflow"
-        A["<b>Define Model</b><br/>(extends BaseModel)"]
-        B["<b>Define Data</b><br/>(Dataset / DataLoader)"]
-        G["<b>Extras</b><br/>(Optimizer, Tensorboard)"]
-        C["<b>Initialize Trainer</b><br/>(extends Trainer)"]
-        D["<b>Initialize Evaluator</b><br/>(extends Evaluator)"]
-        E["trainer.train()"]
-        F["evaluator.evaluate()"]
-        G["<b>Intitialize Tuner</b><br/>(Hyperparameter Tuning)"]
-        H["tuner.tune()"]
-        I["<b>Provided Architectures</b><br/>(Classifier, AE, VAE, ...)"]
 
-    end
 
-    %% Define node relationships
-    A --> C
-    B --> C
-    I --> A
-    A --> D
-    B --> D
-    C --> E
-    D --> F
-    C --> G
-    G --> H
+<p align="middle">
+  <img src="docs/assets/flowchart.svg" width="600" />
+</p>
 
-    %% Style the nodes
-    style A fill:#fbe,stroke:#333,stroke-width:2px
-    style B fill:#fbe,stroke:#333,stroke-width:2px
-    style G fill:#ffc,stroke:#333,stroke-width:2px
-    style C fill:#cde,stroke:#333,stroke-width:2px
-    style D fill:#cde,stroke:#333,stroke-width:2px
-    style E fill:#cfc,stroke:#333,stroke-width:2px
-    style F fill:#cfc,stroke:#333,stroke-width:2px
-    style G fill:#cde,stroke:#333,stroke-width:2px
-    style H fill:#cfc,stroke:#333,stroke-width:2px
-```
 
 Furthermore, this package provides architecture implementations and modelling utilities.
 Currently implemented architectures include:
