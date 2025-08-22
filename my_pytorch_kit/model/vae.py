@@ -6,6 +6,7 @@ from typing import Tuple
 
 from my_pytorch_kit.model.models import BaseModel
 from my_pytorch_kit.model.utils import ConvArchitect, AffineArchitect
+from my_pytorch_kit.model.ae import ImageAE
 
 
 class ImageVAE(BaseModel):
@@ -101,6 +102,32 @@ class ImageVAESemiSupervised(ImageVAE):
                  classifier_activation = nn.PReLU(),
                  classifier_loss_weight = 1e-2,
                  **kwargs):
+        """
+        Initializes the Variational Autoencoder.
+
+        Parameters
+        ----------
+        input_shape: tuple
+            Shape of the input image.
+        encoder_num_layers: int
+            Number of encoder layers.
+        decoder_num_layers: int
+            Number of decoder layers.
+        latent_dim: int
+            Dimension of the latent space.
+        feature_space: tuple
+            Shape of the output of the convolutional layers.
+        beta: float
+            Weight of the KL divergence loss.
+        classifier_num_layers: int
+            Number of layers in the classifier.
+        classifier_activation: nn.Module
+            Activation function for the classifier.
+        classifier_loss_weight: float
+            Weight of the classifier loss.
+        """
+
+
         super().__init__(
             input_shape = input_shape,
             encoder_num_layers = encoder_num_layers,
@@ -135,18 +162,121 @@ class ImageVAESemiSupervised(ImageVAE):
     def calc_loss(self, batch, criterion):
         x, y = batch
         x_hat, y_hat = self.forward(x)
-        reconstruction_loss = criterion(x_hat, x)
-        kl_div = self.kl_loss(self.params)
+        batch_size = x.size(0)
+        reconstruction_loss = criterion(x_hat, x) * self.alpha / batch_size
+        kl_div = self.kl_loss(self.params) * self.beta / batch_size
 
         one_hot = nn.functional.one_hot(y, self.classifier_num_classes).float()
-        classifier_loss = self.cel(y_hat, one_hot)
+        classifier_loss = self.cel(y_hat, one_hot) * self.classifier_loss_weight / batch_size
+
+        loss = reconstruction_loss + kl_div + classifier_loss
+
+        loss_dict = {
+            "loss": loss,
+            "reconstruction_loss": reconstruction_loss,
+            "kl_div": kl_div,
+            "classifier_loss": classifier_loss
+        }
+
+        return loss_dict
+
+
+class ImageVAEwithAE(ImageVAE):
+    """
+    Variational autoencoder, in which autoencoder reconstruction loss is added.
+    The autoencoder runs on the output of the VAE, ensuring that the VAE is forced
+    to produce images that can be represented in the latent space of the autoencoder.
+    """
+
+    def __init__(
+        self,
+        *,
+        input_shape = (1, 28, 28),
+        encoder_num_layers = 3,
+        decoder_num_layers = 3,
+        latent_dim = 2,
+        feature_space = (8, 3, 3),
+        alpha = 1,
+        beta = 1e-2,
+        ae_class = ImageAE,
+        ae_path = 'models/ae.pt',
+        ae_reconstruction_loss_weight = 1e-2,
+        ae_reconstruction_loss_criterion = nn.BCELoss(reduction="mean"),
+        **kwargs
+    ):
+        """
+        Initializes the Variational Autoencoder.
+
+        Parameters
+        ----------
+        input_shape: tuple
+            Shape of the input image.
+        encoder_num_layers: int
+            Number of encoder layers.
+        decoder_num_layers: int
+            Number of decoder layers.
+        latent_dim: int
+            Dimension of the latent space.
+        feature_space: tuple
+            Shape of the output of the convolutional layers.
+        beta: float
+            Weight of the KL divergence loss.
+        ae_class: nn.Module
+            Autoencoder class
+        ae_path: str
+            Path to the autoencoder model
+        ae_reconstruction_loss_weight: float
+            Weight of the autoencoder reconstruction loss
+        ae_reconstruction_loss_criterion: nn.Module
+            Criterion for the autoencoder reconstruction loss
+        """
+        super().__init__(
+            input_shape = input_shape,
+            encoder_num_layers = encoder_num_layers,
+            decoder_num_layers = decoder_num_layers,
+            latent_dim = latent_dim,
+            feature_space = feature_space,
+            alpha = alpha,
+            beta = beta,
+            **kwargs
+        )
+
+        self.ae = ae_class()
+        self.ae.load_model(ae_path)
+        for param in self.ae.parameters():
+            param.requires_grad = False
+
+        self.ae_loss_weight = ae_reconstruction_loss_weight
+        self.ae_criterion = ae_reconstruction_loss_criterion
+
+    def forward(self, x):
+        params = self.encoder(x)
+        self.params = params
+        z = self.sampler(params)
+        x_hat = self.decoder(z)
+        x_hat = self.sigmoid(x_hat)
+        return x_hat
+
+    def calc_loss(self, batch, criterion):
+        x, _ = batch
+        x_hat = self.forward(x)
 
         batch_size = x.size(0)
-        loss = (self.alpha * reconstruction_loss / batch_size) + (self.beta * kl_div / batch_size) + (self.classifier_loss_weight * classifier_loss / batch_size)
 
-        return loss
+        reconstruction_loss = criterion(x_hat, x) * self.alpha / batch_size
+        kl_div = self.kl_loss(self.params) * self.beta / batch_size
+        ae_recon_loss = self.ae_criterion(self.ae(x_hat), x_hat) * self.ae_loss_weight / batch_size
 
+        loss = reconstruction_loss + kl_div + ae_recon_loss
 
+        loss_dict = {
+            "loss": loss,
+            "reconstruction_loss": reconstruction_loss,
+            "kl_div": kl_div,
+            "ae_recon_loss": ae_recon_loss
+        }
+
+        return loss_dict
 
 class VariationalEncoder(nn.Module):
     """
