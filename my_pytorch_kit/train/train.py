@@ -132,7 +132,11 @@ class Trainer:
                 training_loop = create_tqdm_bar(self.train_loader, desc=f'Training Epoch [{epoch + 1}/{epochs}]')
                 for train_iteration, batch in training_loop:
                     optimizer.zero_grad()
-                    loss = self.model.calc_loss(batch, loss_func)
+                    returned_loss = self.model.calc_loss(batch, loss_func)
+                    if type(returned_loss) is dict:
+                        loss = returned_loss['loss']
+                    else:
+                        loss = returned_loss
                     loss.backward()
                     optimizer.step()
 
@@ -146,13 +150,24 @@ class Trainer:
                     # Update the tensorboard logger.
                     self.add_tb_scalar(f'{name}/train_loss', loss.item(), epoch * len(self.train_loader) + train_iteration)
 
+                    if type(returned_loss) is dict:
+                        for loss_name, loss_value in returned_loss.items():
+                            if loss_name != 'loss':
+                                self.add_tb_scalar(f'{name}/loss_components/{loss_name}', loss_value.item() / loss.item(), epoch * len(self.train_loader) + train_iteration)
+
+
+
                 # VALIDATION
                 self.model.eval()
                 val_loop = create_tqdm_bar(self.val_loader, desc=f'Validation Epoch [{epoch + 1}/{epochs}]')
 
                 with torch.no_grad():
                     for val_iteration, batch in val_loop:
-                        loss = self.model.calc_loss(batch, loss_func)
+                        returned_loss = self.model.calc_loss(batch, loss_func)
+                        if type(returned_loss) is dict:
+                            loss = returned_loss['loss']
+                        else:
+                            loss = returned_loss
                         validation_loss.append(loss.item())
                         last_cutoff_loss = np.mean(validation_loss[-loss_cutoff:])
 
@@ -161,6 +176,7 @@ class Trainer:
 
                         # Update the tensorboard logger.
                         self.add_tb_scalar(f'{name}/val_loss', last_cutoff_loss, epoch * len(self.val_loader) + val_iteration)
+
 
                 # best val loss check
                 total_val_loss = np.mean(validation_loss)

@@ -42,7 +42,7 @@ class BaseModel(nn.Module):
                 )
 
     @abstractmethod
-    def calc_loss(self, batch, criterion, **kwargs) -> torch.Tensor:
+    def calc_loss(self, batch, criterion, **kwargs) -> torch.Tensor | dict[str, torch.Tensor]:
         """
         Calculates the loss for a given batch and criterion.
 
@@ -59,6 +59,11 @@ class BaseModel(nn.Module):
         -------
         torch.Tensor
             The loss for the batch.
+        OR
+        dict[str, torch.Tensor]
+            A dictionary of losses.
+            Losses should be keyed by name.
+            The total loss should be keyed by 'loss'.
         """
         pass
 
